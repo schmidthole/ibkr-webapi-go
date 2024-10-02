@@ -1,3 +1,2 @@
-# ibkr-wepapi-go
+# Interactive Brokers Golang Web Client
 
-Interactive Brokers Web API Client
