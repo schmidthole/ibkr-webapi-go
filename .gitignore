@@ -13,3 +13,4 @@ go.work.sum
 credentials.yml
 *.pem
 testfile*
+credentials/
