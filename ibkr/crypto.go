@@ -7,10 +7,17 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/asn1"
 	"encoding/pem"
 	"fmt"
+	"math/big"
 	"os"
 )
+
+type dhParams struct {
+	P *big.Int
+	G *big.Int
+}
 
 func ImportRsaKeyFromPem(pemPath string) (*rsa.PrivateKey, error) {
 	pemData, err := os.ReadFile(pemPath)
@@ -23,7 +30,8 @@ func ImportRsaKeyFromPem(pemPath string) (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 
-	return x509.ParsePKCS1PrivateKey(block.Bytes)
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	return key.(*rsa.PrivateKey), err
 }
 
 func ImportDhParametersFromPem(pemPath string) (*dsa.Parameters, error) {
@@ -34,21 +42,20 @@ func ImportDhParametersFromPem(pemPath string) (*dsa.Parameters, error) {
 
 	block, _ := pem.Decode(pemData)
 	if block == nil || block.Type != "DH PARAMETERS" {
-		return nil, err
+		return nil, fmt.Errorf("invalid PEM block type: %s", block.Type)
 	}
 
-	// Parse the DH parameters
-	dhParams, err := x509.ParsePKIXPublicKey(block.Bytes)
+	var params dhParams
+	_, err = asn1.Unmarshal(block.Bytes, &params)
 	if err != nil {
 		return nil, err
 	}
 
-	dhParameters, ok := dhParams.(*dsa.Parameters)
-	if !ok {
-		return nil, fmt.Errorf("failed to cast dh params to *dsa.Parameters")
-	}
-
-	return dhParameters, nil
+	return &dsa.Parameters{
+		P: params.P,
+		Q: big.NewInt(0),
+		G: params.G,
+	}, nil
 }
 
 func SignRsa(input []byte, key *rsa.PrivateKey) ([]byte, error) {

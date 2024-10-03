@@ -12,3 +12,4 @@ go.work.sum
 .vscode/
 credentials.yml
 *.pem
+testfile*
