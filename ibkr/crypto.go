@@ -30,8 +30,13 @@ func ImportRsaKeyFromPem(pemPath string) (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 
-	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	return key.(*rsa.PrivateKey), err
+	pkcs1Key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		pkcs8Key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		return pkcs8Key.(*rsa.PrivateKey), err
+	}
+
+	return pkcs1Key, err
 }
 
 func ImportDhParametersFromPem(pemPath string) (*dsa.Parameters, error) {

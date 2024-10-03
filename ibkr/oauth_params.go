@@ -2,7 +2,6 @@ package ibkr
 
 import (
 	"fmt"
-	"net/url"
 	"sort"
 )
 
@@ -19,10 +18,10 @@ func (p OAuthParams) ToSignatureString() string {
 	outString := ""
 
 	for _, key := range keys {
-		outString = outString + fmt.Sprintf("&%v=%v", key, p[key])
+		outString = outString + fmt.Sprintf("&%v=\"%v\"", key, p[key])
 	}
 
-	return url.PathEscape(outString)
+	return outString
 }
 
 func (p OAuthParams) ToHeaderString() string {
@@ -35,9 +34,13 @@ func (p OAuthParams) ToHeaderString() string {
 
 	outString := "OAuth "
 
-	for _, key := range keys {
-		outString = outString + fmt.Sprintf(", %v=%v", key, p[key])
+	for i, key := range keys {
+		if i == 0 {
+			outString = outString + fmt.Sprintf("%v=\"%v\"", key, p[key])
+		} else {
+			outString = outString + fmt.Sprintf(", %v=\"%v\"", key, p[key])
+		}
 	}
 
-	return url.PathEscape(outString)
+	return outString
 }

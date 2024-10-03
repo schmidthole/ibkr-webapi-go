@@ -123,6 +123,50 @@ func getOAuthTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
+func (i *IbkrOAuthContext) GetOAuthHeader(method string, requestUrl string) (string, error) {
+	if i.Lst == "" {
+		return "", fmt.Errorf("ibkr oauth live session token not present")
+	}
+
+	if i.LstExpiration < time.Now().Unix() {
+		return "", fmt.Errorf("ibker oauth live session token likely expired")
+	}
+
+	timestamp := getOAuthTimestamp()
+	params := OAuthParams{}
+
+	nonce, err := generateOAuthNonce()
+	if err != nil {
+		return "", err
+	}
+
+	params["oauth_consumer_key"] = i.ConsumerKey
+	params["oauth_nonce"] = nonce
+	params["oauth_signature_method"] = "HMAC-SHA256"
+	params["oauth_timestamp"] = timestamp
+	params["oauth_token"] = i.AccessToken
+
+	baseString := fmt.Sprintf(
+		"%v&%v%v",
+		method,
+		url.QueryEscape(requestUrl),
+		params.ToSignatureString(),
+	)
+
+	tokenBytes, err := base64.StdEncoding.DecodeString(i.Lst)
+	if err != nil {
+		return "", err
+	}
+
+	h := hmac.New(sha256.New, tokenBytes)
+	h.Write([]byte(baseString))
+	params["oauth_signature"] = url.QueryEscape(base64.StdEncoding.EncodeToString(h.Sum(nil)))
+
+	params["realm"] = "limited_poa"
+
+	return params.ToHeaderString(), nil
+}
+
 func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl string) error {
 	dhRandom, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 256))
 	if err != nil {
@@ -149,7 +193,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	}
 
 	method := "POST"
-	tokenUrl := url.QueryEscape(fmt.Sprintf("%v/oauth/live_session_token", baseUrl))
+	tokenUrl := fmt.Sprintf("%v/oauth/live_session_token", baseUrl)
 
 	params := OAuthParams{}
 	params["diffie_hellman_challenge"] = dhChallenge
@@ -163,7 +207,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 		"%v%v%v%v",
 		prepend,
 		method,
-		tokenUrl,
+		url.QueryEscape(tokenUrl),
 		params.ToSignatureString(),
 	)
 
@@ -172,7 +216,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 		return err
 	}
 
-	params["oauth_signature"] = base64.StdEncoding.EncodeToString(signature)
+	params["oauth_signature"] = url.QueryEscape(base64.StdEncoding.EncodeToString(signature))
 	params["realm"] = "limited_poa"
 
 	req, err := http.NewRequest(method, tokenUrl, nil)
@@ -183,11 +227,19 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	req.Header.Set("User-Agent", "golang net/http")
 	req.Header.Set("Authorization", params.ToHeaderString())
 
+	logRequest(req)
+
 	rsp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer rsp.Body.Close()
+
+	logResponse(rsp)
+
+	if rsp.StatusCode != 200 {
+		return fmt.Errorf("bad live session token statusCode: %v", rsp.StatusCode)
+	}
 
 	body, err := io.ReadAll(rsp.Body)
 	if err != nil {
@@ -227,48 +279,4 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	}
 
 	return nil
-}
-
-func (i *IbkrOAuthContext) GetOAuthHeader(method string, requestUrl string) (string, error) {
-	if i.Lst == "" {
-		return "", fmt.Errorf("ibkr oauth live session token not present")
-	}
-
-	if i.LstExpiration < time.Now().Unix() {
-		return "", fmt.Errorf("ibker oauth live session token likely expired")
-	}
-
-	timestamp := getOAuthTimestamp()
-	params := OAuthParams{}
-
-	nonce, err := generateOAuthNonce()
-	if err != nil {
-		return "", err
-	}
-
-	params["oauth_consumer_key"] = i.ConsumerKey
-	params["oauth_nonce"] = nonce
-	params["oauth_signature_method"] = "HMAC-SHA256"
-	params["oauth_timestamp"] = timestamp
-	params["oauth_token"] = i.AccessToken
-
-	baseString := fmt.Sprintf(
-		"%v&%v%v",
-		method,
-		url.QueryEscape(requestUrl),
-		params.ToSignatureString(),
-	)
-
-	tokenBytes, err := base64.StdEncoding.DecodeString(i.Lst)
-	if err != nil {
-		return "", err
-	}
-
-	h := hmac.New(sha256.New, tokenBytes)
-	h.Write([]byte(baseString))
-	params["oauth_signature"] = url.PathEscape(base64.StdEncoding.EncodeToString(h.Sum(nil)))
-
-	params["realm"] = "limited_poa"
-
-	return params.ToHeaderString(), nil
 }

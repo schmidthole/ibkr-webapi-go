@@ -121,6 +121,10 @@ func (c *IbkrWebClient) Delete(path string, queryParams map[string]string) (*cli
 	return c.DoRequest(methodDelete, path, queryParams, nil)
 }
 
+func (c *IbkrWebClient) Authenticate() error {
+	return c.oauth.GenerateLiveSessionToken(c.client, c.BaseUrl)
+}
+
 func (c *IbkrWebClient) ParseJsonResponse(response *clientResponse, v interface{}) error {
 	err := json.Unmarshal(response.bytes, v)
 	if err != nil {
