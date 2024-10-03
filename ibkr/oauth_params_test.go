@@ -24,7 +24,7 @@ func TestOAuthParams_ToSignatureString(t *testing.T) {
 				"oauth_signature_method": "HMAC-SHA1",
 				"oauth_timestamp":        "123456789",
 			},
-			expected: "&oauth_consumer_key=key123&oauth_signature_method=HMAC-SHA1&oauth_timestamp=123456789&oauth_token=token123",
+			expected: "&oauth_consumer_key=\"key123\"&oauth_signature_method=\"HMAC-SHA1\"&oauth_timestamp=\"123456789\"&oauth_token=\"token123\"",
 		},
 		{
 			name:     "empty params",
@@ -37,14 +37,14 @@ func TestOAuthParams_ToSignatureString(t *testing.T) {
 				"oauth_token":        "token$@#",
 				"oauth_consumer_key": "key!?",
 			},
-			expected: "&oauth_consumer_key=key!?&oauth_token=token$@#",
+			expected: "&oauth_consumer_key=\"key!?\"&oauth_token=\"token$@#\"",
 		},
 		{
 			name: "single parameter",
 			input: OAuthParams{
 				"oauth_token": "token123",
 			},
-			expected: "&oauth_token=token123",
+			expected: "&oauth_token=\"token123\"",
 		},
 	}
 
@@ -72,7 +72,7 @@ func TestOAuthParams_ToHeaderString(t *testing.T) {
 				"oauth_signature_method": "HMAC-SHA1",
 				"oauth_timestamp":        "123456789",
 			},
-			expected: "OAuth , oauth_consumer_key=key123, oauth_signature_method=HMAC-SHA1, oauth_timestamp=123456789, oauth_token=token123",
+			expected: "OAuth oauth_consumer_key=\"key123\", oauth_signature_method=\"HMAC-SHA1\", oauth_timestamp=\"123456789\", oauth_token=\"token123\"",
 		},
 		{
 			name:     "empty params",
@@ -85,14 +85,14 @@ func TestOAuthParams_ToHeaderString(t *testing.T) {
 				"oauth_token":        "token$@#",
 				"oauth_consumer_key": "key!?",
 			},
-			expected: "OAuth , oauth_consumer_key=key!?, oauth_token=token$@#",
+			expected: "OAuth oauth_consumer_key=\"key!?\", oauth_token=\"token$@#\"",
 		},
 		{
 			name: "single parameter",
 			input: OAuthParams{
 				"oauth_token": "token123",
 			},
-			expected: "OAuth , oauth_token=token123",
+			expected: "OAuth oauth_token=\"token123\"",
 		},
 	}
 
