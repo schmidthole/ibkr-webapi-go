@@ -15,13 +15,25 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type OAuthContext interface {
 	GenerateLiveSessionToken(client *http.Client, baseUrl string) error
 	GetOAuthHeader(method string, requestUrl string) (string, error)
+}
+
+type IbkrOAuthCredentials struct {
+	CustomerKey       string `yaml:"customer_key"`
+	AccessToken       string `yaml:"access_token"`
+	AccessSecret      string `yaml:"access_secret"`
+	SigningKeyPath    string `yaml:"signing_key_path"`
+	EncryptionKeyPath string `yaml:"encryption_key_path"`
+	DHParamsPath      string `yaml:"dh_params_path"`
 }
 
 type IbkrOAuthContext struct {
@@ -42,7 +54,7 @@ type liveSessionTokenResponse struct {
 	LstExpiration int64  `json:"live_session_token_expiration"`
 }
 
-func InitIbkrOAuthContext(
+func NewIbkrOAuthContext(
 	consumerKey string,
 	accessToken string,
 	accessSecret string,
@@ -73,6 +85,29 @@ func InitIbkrOAuthContext(
 		AccessToken:   accessToken,
 		AccessSecret:  accessSecret,
 	}, nil
+}
+
+func NewIbkrOAuthContextFromFile(credentialsFilePath string) (*IbkrOAuthContext, error) {
+	data, err := os.ReadFile(credentialsFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var credentials IbkrOAuthCredentials
+
+	err = yaml.Unmarshal(data, &credentials)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewIbkrOAuthContext(
+		credentials.CustomerKey,
+		credentials.AccessToken,
+		credentials.AccessSecret,
+		credentials.SigningKeyPath,
+		credentials.EncryptionKeyPath,
+		credentials.DHParamsPath,
+	)
 }
 
 func generateOAuthNonce() (string, error) {

@@ -29,7 +29,7 @@ type clientResponse struct {
 }
 
 type IbkrWebClient struct {
-	baseUrl   string
+	BaseUrl   string
 	client    *http.Client
 	oauth     OAuthContext
 	validator *validator.Validate
@@ -37,7 +37,7 @@ type IbkrWebClient struct {
 
 func NewIbkrWebClient(baseUrl string, authContext OAuthContext) *IbkrWebClient {
 	return &IbkrWebClient{
-		baseUrl:   baseUrl,
+		BaseUrl:   baseUrl,
 		client:    &http.Client{Timeout: 15 * time.Second},
 		oauth:     authContext,
 		validator: validator.New(validator.WithRequiredStructEnabled()),
@@ -50,7 +50,7 @@ func (c *IbkrWebClient) DoRequest(
 	queryParams map[string]string,
 	body interface{},
 ) (*clientResponse, error) {
-	base, err := url.Parse(c.baseUrl)
+	base, err := url.Parse(c.BaseUrl)
 	if err != nil {
 		return nil, err
 	}

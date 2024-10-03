@@ -22,7 +22,7 @@ type testResponse struct {
 func TestNewIbkrWebClient(t *testing.T) {
 	client := NewIbkrWebClient("mockurl", &MockOAuthContext{})
 
-	assert.Equal(t, "mockurl", client.baseUrl)
+	assert.Equal(t, "mockurl", client.BaseUrl)
 }
 
 func TestIbkrWebClient_Get(t *testing.T) {

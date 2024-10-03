@@ -20,7 +20,7 @@ func (i *MockOAuthContext) GetOAuthHeader(method string, requestUrl string) (str
 
 func NewTestIbkrClient(baseUrl string) *IbkrWebClient {
 	return &IbkrWebClient{
-		baseUrl: baseUrl,
+		BaseUrl: baseUrl,
 		client:  &http.Client{Timeout: 15 * time.Second},
 		oauth:   &MockOAuthContext{},
 	}
