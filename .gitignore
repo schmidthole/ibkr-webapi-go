@@ -10,3 +10,5 @@ go.work.sum
 .env
 *.checkpoint
 .vscode/
+credentials.yml
+*.pem
