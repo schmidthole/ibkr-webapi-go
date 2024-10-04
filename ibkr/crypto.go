@@ -26,17 +26,18 @@ func ImportRsaKeyFromPem(pemPath string) (*rsa.PrivateKey, error) {
 	}
 
 	block, _ := pem.Decode(pemData)
-	if block == nil || block.Type != "RSA PRIVATE KEY" {
+
+	pkcs8Key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
 		return nil, err
 	}
 
-	pkcs1Key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		pkcs8Key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-		return pkcs8Key.(*rsa.PrivateKey), err
+	rsaKey, ok := pkcs8Key.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("error parsing PKCS#8 rsa key")
 	}
 
-	return pkcs1Key, err
+	return rsaKey, nil
 }
 
 func ImportDhParametersFromPem(pemPath string) (*dsa.Parameters, error) {
@@ -64,9 +65,6 @@ func ImportDhParametersFromPem(pemPath string) (*dsa.Parameters, error) {
 }
 
 func SignRsa(input []byte, key *rsa.PrivateKey) ([]byte, error) {
-	hash := sha256.New()
-	hash.Write(input)
-	hashedMessage := hash.Sum(nil)
-
-	return rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, hashedMessage)
+	hash := sha256.Sum256(input)
+	return rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, hash[:])
 }

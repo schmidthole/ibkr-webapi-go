@@ -2,10 +2,18 @@ package ibkr
 
 import (
 	"fmt"
+	"log"
 	"sort"
 )
 
 type OAuthParams map[string]string
+
+func (p OAuthParams) logRaw() {
+	log.Println("oauth raw params: ")
+	for key, val := range p {
+		log.Printf("- %v: %v", key, val)
+	}
+}
 
 func (p OAuthParams) ToSignatureString() string {
 	keys := make([]string, 0, len(p))

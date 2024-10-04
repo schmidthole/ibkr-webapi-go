@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math/big"
 	"net/http"
 	"net/url"
@@ -110,13 +111,28 @@ func NewIbkrOAuthContextFromFile(credentialsFilePath string) (*IbkrOAuthContext,
 	)
 }
 
-func generateOAuthNonce() (string, error) {
-	nonce, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
+func generateNonce(bitLength int) (*big.Int, error) {
+	nonce, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), uint(bitLength)))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return nonce.Text(16), nil
+	return nonce, nil
+}
+
+func (i *IbkrOAuthContext) generateDhChallenge(dhRandom *big.Int) *big.Int {
+	dhChallenge := big.NewInt(0)
+	dhChallenge.Exp(i.DhParams.G, dhRandom, i.DhParams.P)
+	return dhChallenge
+}
+
+func (i *IbkrOAuthContext) getPrepend() ([]byte, error) {
+	ciphertext, err := base64.StdEncoding.DecodeString(i.AccessSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return rsa.DecryptPKCS1v15(rand.Reader, i.EncryptionKey, ciphertext)
 }
 
 func getOAuthTimestamp() string {
@@ -135,13 +151,13 @@ func (i *IbkrOAuthContext) GetOAuthHeader(method string, requestUrl string) (str
 	timestamp := getOAuthTimestamp()
 	params := OAuthParams{}
 
-	nonce, err := generateOAuthNonce()
+	nonce, err := generateNonce(128)
 	if err != nil {
 		return "", err
 	}
 
 	params["oauth_consumer_key"] = i.ConsumerKey
-	params["oauth_nonce"] = nonce
+	params["oauth_nonce"] = nonce.Text(16)
 	params["oauth_signature_method"] = "HMAC-SHA256"
 	params["oauth_timestamp"] = timestamp
 	params["oauth_token"] = i.AccessToken
@@ -150,7 +166,7 @@ func (i *IbkrOAuthContext) GetOAuthHeader(method string, requestUrl string) (str
 		"%v&%v%v",
 		method,
 		url.QueryEscape(requestUrl),
-		params.ToSignatureString(),
+		url.QueryEscape(params.ToSignatureString()),
 	)
 
 	tokenBytes, err := base64.StdEncoding.DecodeString(i.Lst)
@@ -168,48 +184,44 @@ func (i *IbkrOAuthContext) GetOAuthHeader(method string, requestUrl string) (str
 }
 
 func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl string) error {
-	dhRandom, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 256))
+	dhRandom, err := generateNonce(256)
 	if err != nil {
 		return err
 	}
 
-	dhChallengeBig := big.NewInt(0)
-	dhChallengeBig.Exp(i.DhParams.G, dhRandom, i.DhParams.P)
-	dhChallenge := dhChallengeBig.Text(16)
+	dhChallenge := i.generateDhChallenge(dhRandom)
 
-	ciphertext, err := base64.StdEncoding.DecodeString(i.AccessSecret)
-	if err != nil {
-		return err
-	}
-	prependBytes, err := rsa.DecryptPKCS1v15(rand.Reader, i.EncryptionKey, ciphertext)
-	if err != nil {
-		return err
-	}
-	prepend := hex.EncodeToString(prependBytes)
-
-	nonce, err := generateOAuthNonce()
+	prepend, err := i.getPrepend()
 	if err != nil {
 		return err
 	}
 
-	method := "POST"
+	nonce, err := generateNonce(128)
+	if err != nil {
+		return err
+	}
+
 	tokenUrl := fmt.Sprintf("%v/oauth/live_session_token", baseUrl)
 
 	params := OAuthParams{}
-	params["diffie_hellman_challenge"] = dhChallenge
-	params["oauth_consumer_key"] = i.ConsumerKey
-	params["oauth_nonce"] = nonce
+	params["diffie_hellman_challenge"] = dhChallenge.Text(16)
+	params["oauth_consumer_key"] = "TESTCONS" //i.ConsumerKey
+	params["oauth_nonce"] = nonce.Text(16)
 	params["oauth_signature_method"] = "RSA-SHA256"
 	params["oauth_timestamp"] = getOAuthTimestamp()
 	params["oauth_token"] = i.AccessToken
 
+	params.logRaw()
+
 	baseString := fmt.Sprintf(
-		"%v%v%v%v",
-		prepend,
-		method,
+		"%v%v&%v%v",
+		hex.EncodeToString(prepend),
+		methodPost,
 		url.QueryEscape(tokenUrl),
-		params.ToSignatureString(),
+		url.PathEscape(params.ToSignatureString()),
 	)
+
+	log.Printf("base string: %v", baseString)
 
 	signature, err := SignRsa([]byte(baseString), i.SigningKey)
 	if err != nil {
@@ -217,14 +229,14 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	}
 
 	params["oauth_signature"] = url.QueryEscape(base64.StdEncoding.EncodeToString(signature))
-	params["realm"] = "limited_poa"
+	params["realm"] = "test_realm"
 
-	req, err := http.NewRequest(method, tokenUrl, nil)
+	req, err := http.NewRequest(methodPost, tokenUrl, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("User-Agent", "golang net/http")
+	req.Header.Set("User-Agent", "golang/1.23.1")
 	req.Header.Set("Authorization", params.ToHeaderString())
 
 	logRequest(req)
@@ -237,7 +249,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 
 	logResponse(rsp)
 
-	if rsp.StatusCode != 200 {
+	if rsp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad live session token statusCode: %v", rsp.StatusCode)
 	}
 
@@ -263,7 +275,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	kBytes := kBig.Bytes()
 
 	hCalc := hmac.New(sha1.New, kBytes)
-	hCalc.Write(prependBytes)
+	hCalc.Write(prepend)
 	lstBytes := hCalc.Sum(nil)
 
 	i.Lst = base64.StdEncoding.EncodeToString(lstBytes)
