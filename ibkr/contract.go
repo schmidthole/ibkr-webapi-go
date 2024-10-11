@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+/******************************************************************************
+* search contract by symbol
+******************************************************************************/
+
 type SearchContractBySymbolResponse struct {
 	ConID       string `json:"conid" validate:"required"`
 	CompanyName string `json:"companyName" validate:"required"`
