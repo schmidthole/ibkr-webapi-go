@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 /******************************************************************************
@@ -120,17 +121,19 @@ type MarketDataSnapshotResponse struct {
 }
 
 type MarketDataSnapshot struct {
-	ConID       int
-	Symbol      string
-	LastPrice   float64
-	High        float64
-	Low         float64
-	MarketValue float64
-	PnLPercent  float64
-	Open        float64
-	Close       float64
-	Mark        float64
-	PriorClose  float64
+	ConID         int
+	Symbol        string
+	TradingHalted bool
+	TradingActive bool
+	LastPrice     float64
+	High          float64
+	Low           float64
+	MarketValue   float64
+	PnLPercent    float64
+	Open          float64
+	Close         float64
+	Mark          float64
+	PriorClose    float64
 }
 
 func (c *IbkrWebClient) MarketDataSnapshot(
@@ -177,7 +180,23 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 	snapshots := []MarketDataSnapshot{}
 	for _, raw := range responseStruct {
 
-		lastPriceFloat, err := strconv.ParseFloat(raw.LastPrice, 64)
+		lastPriceString := raw.LastPrice
+		var lastPricePrefix string
+		if strings.HasPrefix(lastPriceString, "C") || strings.HasPrefix(lastPriceString, "H") {
+			lastPricePrefix = lastPriceString[:1]
+			lastPriceString = lastPriceString[1:]
+		}
+
+		tradingActive := true
+		tradingHalted := false
+		if lastPricePrefix == "C" {
+			tradingActive = false
+		} else if lastPricePrefix == "H" {
+			tradingActive = false
+			tradingHalted = true
+		}
+
+		lastPriceFloat, err := strconv.ParseFloat(lastPriceString, 64)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing last price for conid %v, found: %v", raw.ConID, raw.LastPrice)
 		}
@@ -223,17 +242,19 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 		}
 
 		snapshot := MarketDataSnapshot{
-			ConID:       raw.ConID,
-			Symbol:      raw.Symbol,
-			LastPrice:   lastPriceFloat,
-			High:        highFloat,
-			Low:         lowFloat,
-			MarketValue: marketValueFloat,
-			PnLPercent:  pnlPctFloat,
-			Open:        openFloat,
-			Close:       closeFloat,
-			Mark:        markFloat,
-			PriorClose:  priorCloseFloat,
+			ConID:         raw.ConID,
+			Symbol:        raw.Symbol,
+			TradingActive: tradingActive,
+			TradingHalted: tradingHalted,
+			LastPrice:     lastPriceFloat,
+			High:          highFloat,
+			Low:           lowFloat,
+			MarketValue:   marketValueFloat,
+			PnLPercent:    pnlPctFloat,
+			Open:          openFloat,
+			Close:         closeFloat,
+			Mark:          markFloat,
+			PriorClose:    priorCloseFloat,
 		}
 
 		snapshots = append(snapshots, snapshot)
