@@ -17,8 +17,9 @@ type SearchContractBySymbolResponse struct {
 
 func (c *IbkrWebClient) SearchContractBySymbol(symbol string) ([]SearchContractBySymbolResponse, error) {
 	params := map[string]string{
-		"symbol": symbol,
-		"name":   "false",
+		"symbol":  symbol,
+		"name":    "false",
+		"secType": "STK",
 	}
 
 	response, err := c.Get("/iserver/secdef/search", params)
