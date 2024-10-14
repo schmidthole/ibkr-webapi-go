@@ -158,3 +158,26 @@ func (c *IbkrWebClient) GetLiveOrders() (*LiveOrdersResponse, error) {
 
 	return &responseStruct, nil
 }
+
+/******************************************************************************
+* suppress messages
+******************************************************************************/
+
+type SupressMessagesRequest struct {
+	MessageIDs []string `json:"messageIds"`
+}
+
+func (c *IbkrWebClient) SuppressMessages(messageIds []string) error {
+	requestBody := SupressMessagesRequest{MessageIDs: messageIds}
+
+	response, err := c.Post("/iserver/questions/suppress", nil, requestBody)
+	if err != nil {
+		return err
+	}
+
+	if response.statusCode != http.StatusOK {
+		return fmt.Errorf("suppress messages bad statusCode: %v", response.statusCode)
+	}
+
+	return nil
+}
