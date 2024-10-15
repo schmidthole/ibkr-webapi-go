@@ -83,9 +83,7 @@ const (
 	snapshotFieldHigh        = "70"
 	snapshotFieldLow         = "71"
 	snapshotFieldMarketValue = "73"
-	snapshotFieldPnLPercent  = "80"
 	snapshotFieldOpen        = "7295"
-	snapshotFieldClose       = "7296"
 	snapshotFieldMark        = "7635"
 	snapshotFieldPriorClose  = "7741"
 )
@@ -96,9 +94,7 @@ var marketDataSnapshotFields = []string{
 	snapshotFieldHigh,
 	snapshotFieldLow,
 	snapshotFieldMarketValue,
-	snapshotFieldPnLPercent,
 	snapshotFieldOpen,
-	snapshotFieldClose,
 	snapshotFieldMark,
 	snapshotFieldPriorClose,
 }
@@ -110,9 +106,7 @@ type MarketDataSnapshotResponse struct {
 	High        string `json:"70" validation:"required"`
 	Low         string `json:"71" validation:"required"`
 	MarketValue string `json:"73" validation:"required"`
-	PnLPercent  string `json:"80" validation:"required"`
 	Open        string `json:"7295" validation:"required"`
-	Close       string `json:"7296" validation:"required"`
 	Mark        string `json:"7635" validation:"required"`
 	PriorClose  string `json:"7741" validation:"required"`
 }
@@ -213,19 +207,9 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 			return nil, fmt.Errorf("error parsing market value for conid %v, found: %v", raw.ConID, raw.MarketValue)
 		}
 
-		pnlPctFloat, err := strconv.ParseFloat(raw.PnLPercent, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing pnl percent for conid %v, found: %v", raw.ConID, raw.PnLPercent)
-		}
-
 		openFloat, err := strconv.ParseFloat(raw.Open, 64)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing open for conid %v, found: %v", raw.ConID, raw.Open)
-		}
-
-		closeFloat, err := strconv.ParseFloat(raw.Close, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing close for conid %v, found: %v", raw.ConID, raw.Close)
 		}
 
 		markFloat, err := strconv.ParseFloat(raw.Mark, 64)
@@ -247,9 +231,7 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 			High:          highFloat,
 			Low:           lowFloat,
 			MarketValue:   marketValueFloat,
-			PnLPercent:    pnlPctFloat,
 			Open:          openFloat,
-			Close:         closeFloat,
 			Mark:          markFloat,
 			PriorClose:    priorCloseFloat,
 		}
