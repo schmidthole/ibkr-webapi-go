@@ -13,9 +13,6 @@ import (
 
 type MarketDataHistoryResponse struct {
 	StartTime       string    `json:"startTime" validation:"required"`
-	StartTimeVal    int       `json:"startTimeVal" validation:"required"`
-	EndTime         string    `json:"endTime" validation:"required"`
-	EndTimeVal      int       `json:"endTimeVal" validation:"required"`
 	Data            []OHLCBar `json:"data" validation:"required"`
 	Points          int       `json:"points" validation:"required"`
 	MarketDataDelay int       `json:"mktDataDelay" validation:"required"`
@@ -58,7 +55,7 @@ func (c *IbkrWebClient) MarketDataHistory(
 		"bar":    barType,
 	}
 
-	response, err := c.Get("/hmds/history", params)
+	response, err := c.Get("/iserver/marketdata/history", params)
 	if err != nil {
 		return nil, err
 	}

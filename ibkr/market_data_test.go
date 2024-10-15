@@ -13,9 +13,6 @@ var testConid = 1234
 
 var testMarketDataHistoryResponse = `{
   "startTime": "20231211-04:00:00",
-  "startTimeVal": 1702285200000,
-  "endTime": "20231211-17:51:20",
-  "endTimeVal": 1702335080000,
   "data": [
     {
       "t": 1702285200000,
