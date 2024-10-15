@@ -49,7 +49,7 @@ func main() {
 		panic(err)
 	}
 
-	err = client.SuppressMessages([]string{"o403"})
+	err = client.SuppressMessages()
 	if err != nil {
 		panic(err)
 	}

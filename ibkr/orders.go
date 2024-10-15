@@ -163,12 +163,24 @@ func (c *IbkrWebClient) GetLiveOrders() (*LiveOrdersResponse, error) {
 * suppress messages
 ******************************************************************************/
 
+const (
+	MessageIdImmediateFill          = "o403"
+	MessageIdMarketOrderRisk        = "o10151"
+	MessageIdOrderWithoutMarketData = "o354"
+)
+
+var MessagesToSupress = []string{
+	MessageIdImmediateFill,
+	MessageIdMarketOrderRisk,
+	MessageIdOrderWithoutMarketData,
+}
+
 type SupressMessagesRequest struct {
 	MessageIDs []string `json:"messageIds"`
 }
 
-func (c *IbkrWebClient) SuppressMessages(messageIds []string) error {
-	requestBody := SupressMessagesRequest{MessageIDs: messageIds}
+func (c *IbkrWebClient) SuppressMessages() error {
+	requestBody := SupressMessagesRequest{MessageIDs: MessagesToSupress}
 
 	response, err := c.Post("/iserver/questions/suppress", nil, requestBody)
 	if err != nil {
