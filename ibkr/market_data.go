@@ -151,18 +151,18 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 	fieldsParam := ""
 	for i, field := range marketDataSnapshotFields {
 		if i == 0 {
-			conIdParam = conIdParam + field
+			fieldsParam = fieldsParam + field
 		} else {
-			conIdParam = conIdParam + "," + field
+			fieldsParam = fieldsParam + "," + field
 		}
 	}
 
 	params := map[string]string{
-		"conid":  conIdParam,
+		"conids": conIdParam,
 		"fields": fieldsParam,
 	}
 
-	response, err := c.Get("/hmds/history", params)
+	response, err := c.Get("/iserver/marketdata/snapshot", params)
 	if err != nil {
 		return nil, err
 	}
