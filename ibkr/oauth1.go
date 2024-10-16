@@ -38,7 +38,6 @@ type IbkrOAuthCredentials struct {
 }
 
 type IbkrOAuthContext struct {
-	BaseUrl       string
 	ConsumerKey   string
 	SigningKey    *rsa.PrivateKey
 	EncryptionKey *rsa.PrivateKey
@@ -201,11 +200,11 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 		return err
 	}
 
-	tokenUrl := fmt.Sprintf("%v/oauth/live_session_token", baseUrl)
+	tokenUrl := fmt.Sprintf("%v/v1/api/oauth/live_session_token", baseUrl)
 
 	params := OAuthParams{}
 	params["diffie_hellman_challenge"] = dhChallenge.Text(16)
-	params["oauth_consumer_key"] = "TESTCONS" //i.ConsumerKey
+	params["oauth_consumer_key"] = i.ConsumerKey
 	params["oauth_nonce"] = nonce.Text(16)
 	params["oauth_signature_method"] = "RSA-SHA256"
 	params["oauth_timestamp"] = getOAuthTimestamp()
@@ -218,7 +217,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 		hex.EncodeToString(prepend),
 		methodPost,
 		url.QueryEscape(tokenUrl),
-		url.PathEscape(params.ToSignatureString()),
+		params.ToSignatureString(),
 	)
 
 	log.Printf("base string: %v", baseString)
@@ -229,7 +228,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	}
 
 	params["oauth_signature"] = url.QueryEscape(base64.StdEncoding.EncodeToString(signature))
-	params["realm"] = "test_realm"
+	params["realm"] = "limited_poa"
 
 	req, err := http.NewRequest(methodPost, tokenUrl, nil)
 	if err != nil {

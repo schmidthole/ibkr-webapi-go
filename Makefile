@@ -12,7 +12,7 @@ SRC := $(shell find . -type f -name "*.go" -exec echo {} \;)
 	touch .format.checkpoint
 
 run: $(SRC) .format.checkpoint
-	go run ./cmd/.
+	go run ./cmd/. -oauth
 
 test:
 	go test -v=false ./...
