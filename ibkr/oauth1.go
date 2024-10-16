@@ -269,7 +269,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	dhResponse.SetString(lstRsp.DhResponse, 16)
 
 	i.LstExpiration = lstRsp.LstExpiration
-	lstSignature := lstRsp.LstSignature
+	// lstSignature := lstRsp.LstSignature
 
 	kBig := new(big.Int)
 	kBig.Exp(dhResponse, dhRandom, i.DhParams.P)
@@ -281,15 +281,15 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 
 	i.Lst = base64.StdEncoding.EncodeToString(lstBytes)
 
-	hVerify := hmac.New(sha1.New, lstBytes)
-	hVerify.Write([]byte(i.ConsumerKey))
+	// hVerify := hmac.New(sha1.New, lstBytes)
+	// hVerify.Write([]byte(i.ConsumerKey))
 
-	verifyBytes := hVerify.Sum(nil)
-	verify := hex.EncodeToString(verifyBytes) //base64.StdEncoding.EncodeToString(verifyBytes)
+	// verifyBytes := hVerify.Sum(nil)
+	// verify := hex.EncodeToString(verifyBytes) //base64.StdEncoding.EncodeToString(verifyBytes)
 
-	if verify != lstSignature {
-		fmt.Printf("lst signature mismatch. calc: %v, received: %v", verify, lstSignature)
-	}
+	// if verify != lstSignature {
+	// 	fmt.Printf("lst signature mismatch. calc: %v, received: %v", verify, lstSignature)
+	// }
 
 	return nil
 }
