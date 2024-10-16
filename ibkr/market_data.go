@@ -100,27 +100,22 @@ var marketDataSnapshotFields = []string{
 }
 
 type MarketDataSnapshotResponse struct {
-	ConID       int    `json:"conid" validation:"required"`
-	Symbol      string `json:"55" validation:"required"`
-	LastPrice   string `json:"31" validation:"required"`
-	High        string `json:"70" validation:"required"`
-	Low         string `json:"71" validation:"required"`
-	MarketValue string `json:"73" validation:"required"`
-	Open        string `json:"7295" validation:"required"`
-	Mark        string `json:"7635" validation:"required"`
-	PriorClose  string `json:"7741" validation:"required"`
+	ConID      int    `json:"conid" validation:"required"`
+	LastPrice  string `json:"31" validation:"required"`
+	High       string `json:"70" validation:"required"`
+	Low        string `json:"71" validation:"required"`
+	Open       string `json:"7295" validation:"required"`
+	Mark       string `json:"7635" validation:"required"`
+	PriorClose string `json:"7741" validation:"required"`
 }
 
 type MarketDataSnapshot struct {
 	ConID         int
-	Symbol        string
 	TradingHalted bool
 	TradingActive bool
 	LastPrice     float64
 	High          float64
 	Low           float64
-	MarketValue   float64
-	PnLPercent    float64
 	Open          float64
 	Close         float64
 	Mark          float64
@@ -202,11 +197,6 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 			return nil, fmt.Errorf("error parsing low for conid %v, found: %v", raw.ConID, raw.Low)
 		}
 
-		marketValueFloat, err := strconv.ParseFloat(raw.MarketValue, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing market value for conid %v, found: %v", raw.ConID, raw.MarketValue)
-		}
-
 		openFloat, err := strconv.ParseFloat(raw.Open, 64)
 		if err != nil {
 			return nil, fmt.Errorf("error parsing open for conid %v, found: %v", raw.ConID, raw.Open)
@@ -224,13 +214,11 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 
 		snapshot := MarketDataSnapshot{
 			ConID:         raw.ConID,
-			Symbol:        raw.Symbol,
 			TradingActive: tradingActive,
 			TradingHalted: tradingHalted,
 			LastPrice:     lastPriceFloat,
 			High:          highFloat,
 			Low:           lowFloat,
-			MarketValue:   marketValueFloat,
 			Open:          openFloat,
 			Mark:          markFloat,
 			PriorClose:    priorCloseFloat,
