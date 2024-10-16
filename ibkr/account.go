@@ -13,23 +13,23 @@ type GetAccountsResponse struct {
 	Accounts []string `json:"accounts" validate:"required"`
 }
 
-func (c *IbkrWebClient) GetAccounts() error {
+func (c *IbkrWebClient) GetAccounts() ([]string, error) {
 	response, err := c.Get("/iserver/accounts", nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if response.statusCode != http.StatusOK {
-		return fmt.Errorf("bad get accounts responseCode: %v", response.statusCode)
+		return nil, fmt.Errorf("bad get accounts responseCode: %v", response.statusCode)
 	}
 
 	var responseStruct GetAccountsResponse
 	err = c.ParseJsonResponse(response, &responseStruct)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return responseStruct.Accounts, nil
 }
 
 /******************************************************************************
