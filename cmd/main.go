@@ -37,9 +37,19 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+
+		_, err = client.InitializeBrokerSession()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	_, err := client.Tickle()
+	if err != nil {
+		panic(err)
+	}
+
+	err = client.GetAccounts()
 	if err != nil {
 		panic(err)
 	}
@@ -63,6 +73,7 @@ func main() {
 	// if err != nil {
 	// 	panic(err)
 	// }
+
 	_, err = client.MarketDataSnapshot([]int{72539702})
 	if err != nil {
 		panic(err)
