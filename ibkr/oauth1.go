@@ -281,6 +281,10 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 
 	i.Lst = base64.StdEncoding.EncodeToString(lstBytes)
 
+	// for some reason the verification can sometimes fail with the provided signature.
+	// in all cases if the system proceeds and ignores verification, the lst is still accepted by ibkr, so
+	// it looks like it may be an issue with the api?????? need to check into this
+
 	// hVerify := hmac.New(sha1.New, lstBytes)
 	// hVerify.Write([]byte(i.ConsumerKey))
 
