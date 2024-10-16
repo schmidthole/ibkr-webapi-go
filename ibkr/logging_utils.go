@@ -35,13 +35,6 @@ func logRequest(req *http.Request) {
 func logResponse(resp *http.Response) {
 	log.Printf("---- ibkr http response, status: %s", resp.Status)
 
-	log.Println("headers: ")
-	for key, values := range resp.Header {
-		for _, value := range values {
-			log.Printf("- %s: %s", key, value)
-		}
-	}
-
 	if resp.Body != nil {
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err == nil {
