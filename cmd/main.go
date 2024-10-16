@@ -49,7 +49,7 @@ func main() {
 		panic(err)
 	}
 
-	err = client.GetAccounts()
+	_, err = client.GetAccounts()
 	if err != nil {
 		panic(err)
 	}
