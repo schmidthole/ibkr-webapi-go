@@ -165,8 +165,10 @@ func (i *IbkrOAuthContext) GetOAuthHeader(method string, requestUrl string) (str
 		"%v&%v%v",
 		method,
 		url.QueryEscape(requestUrl),
-		url.QueryEscape(params.ToSignatureString()),
+		params.ToSignatureString(),
 	)
+
+	log.Printf("oauth header base string: %v", baseString)
 
 	tokenBytes, err := base64.StdEncoding.DecodeString(i.Lst)
 	if err != nil {
@@ -269,7 +271,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	i.LstExpiration = lstRsp.LstExpiration
 	lstSignature := lstRsp.LstSignature
 
-	kBig := big.NewInt(0)
+	kBig := new(big.Int)
 	kBig.Exp(dhResponse, dhRandom, i.DhParams.P)
 	kBytes := kBig.Bytes()
 
@@ -283,7 +285,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	hVerify.Write([]byte(i.ConsumerKey))
 
 	verifyBytes := hVerify.Sum(nil)
-	verify := base64.StdEncoding.EncodeToString(verifyBytes)
+	verify := hex.EncodeToString(verifyBytes) //base64.StdEncoding.EncodeToString(verifyBytes)
 
 	if verify != lstSignature {
 		return fmt.Errorf("lst signature mismatch. calc: %v, received: %v", verify, lstSignature)
