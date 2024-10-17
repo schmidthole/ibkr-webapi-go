@@ -28,6 +28,7 @@ var LstExpirationThreshold int64 = 900
 type OAuthContext interface {
 	GenerateLiveSessionToken(client *http.Client, baseUrl string) error
 	GetOAuthHeader(method string, requestUrl string) (string, error)
+	ShouldReAuthenticate() bool
 }
 
 type IbkrOAuthCredentials struct {

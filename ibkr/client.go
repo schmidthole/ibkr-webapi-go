@@ -140,7 +140,6 @@ func (c *IbkrWebClient) Authenticate() error {
 	if !c.oauth.ShouldReAuthenticate() {
 		return nil
 	}
-
 	return c.oauth.GenerateLiveSessionToken(c.client, c.BaseUrl)
 }
 
