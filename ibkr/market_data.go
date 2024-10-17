@@ -114,12 +114,6 @@ type MarketDataSnapshot struct {
 	TradingHalted bool
 	TradingActive bool
 	LastPrice     float64
-	High          float64
-	Low           float64
-	Open          float64
-	Close         float64
-	Mark          float64
-	PriorClose    float64
 }
 
 func (c *IbkrWebClient) MarketDataSnapshot(
@@ -187,41 +181,11 @@ func (c *IbkrWebClient) MarketDataSnapshot(
 			return nil, fmt.Errorf("error parsing last price for conid %v, found: %v", raw.ConID, raw.LastPrice)
 		}
 
-		highFloat, err := strconv.ParseFloat(raw.High, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing high for conid %v, found: %v", raw.ConID, raw.High)
-		}
-
-		lowFloat, err := strconv.ParseFloat(raw.Low, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing low for conid %v, found: %v", raw.ConID, raw.Low)
-		}
-
-		openFloat, err := strconv.ParseFloat(raw.Open, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing open for conid %v, found: %v", raw.ConID, raw.Open)
-		}
-
-		markFloat, err := strconv.ParseFloat(raw.Mark, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing mark for conid %v, found: %v", raw.ConID, raw.Mark)
-		}
-
-		priorCloseFloat, err := strconv.ParseFloat(raw.PriorClose, 64)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing prior close for conid %v, found: %v", raw.ConID, raw.PriorClose)
-		}
-
 		snapshot := MarketDataSnapshot{
 			ConID:         raw.ConID,
 			TradingActive: tradingActive,
 			TradingHalted: tradingHalted,
 			LastPrice:     lastPriceFloat,
-			High:          highFloat,
-			Low:           lowFloat,
-			Open:          openFloat,
-			Mark:          markFloat,
-			PriorClose:    priorCloseFloat,
 		}
 
 		snapshots = append(snapshots, snapshot)
