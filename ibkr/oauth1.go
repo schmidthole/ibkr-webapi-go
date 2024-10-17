@@ -23,6 +23,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var LstExpirationThreshold int64 = 900
+
 type OAuthContext interface {
 	GenerateLiveSessionToken(client *http.Client, baseUrl string) error
 	GetOAuthHeader(method string, requestUrl string) (string, error)
@@ -296,4 +298,14 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	// }
 
 	return nil
+}
+
+func (i *IbkrOAuthContext) ShouldReAuthenticate() bool {
+	if i.Lst == "" || i.LstExpiration <= 0 {
+		return true
+	}
+
+	currentTime := time.Now().Unix()
+
+	return i.LstExpiration-currentTime < LstExpirationThreshold
 }
