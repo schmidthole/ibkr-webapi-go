@@ -12,7 +12,6 @@ import (
 type SearchContractBySymbolResponse struct {
 	ConID       string `json:"conid" validate:"required"`
 	CompanyName string `json:"companyName" validate:"required"`
-	Symbol      string `json:"symbol" validate:"required"`
 }
 
 func (c *IbkrWebClient) SearchContractBySymbol(symbol string) ([]SearchContractBySymbolResponse, error) {
