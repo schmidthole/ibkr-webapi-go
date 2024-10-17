@@ -32,10 +32,11 @@ type clientResponse struct {
 }
 
 type IbkrWebClient struct {
-	BaseUrl   string
-	client    *http.Client
-	oauth     OAuthContext
-	validator *validator.Validate
+	VerboseLogging bool
+	BaseUrl        string
+	client         *http.Client
+	oauth          OAuthContext
+	validator      *validator.Validate
 }
 
 func NewIbkrWebClient(baseUrl string, authContext OAuthContext) *IbkrWebClient {
@@ -48,10 +49,11 @@ func NewIbkrWebClient(baseUrl string, authContext OAuthContext) *IbkrWebClient {
 	}
 
 	return &IbkrWebClient{
-		BaseUrl:   baseUrl,
-		client:    &client,
-		oauth:     authContext,
-		validator: validator.New(validator.WithRequiredStructEnabled()),
+		VerboseLogging: false,
+		BaseUrl:        baseUrl,
+		client:         &client,
+		oauth:          authContext,
+		validator:      validator.New(validator.WithRequiredStructEnabled()),
 	}
 }
 
@@ -104,7 +106,7 @@ func (c *IbkrWebClient) DoRequest(
 		request.Header.Set("Content-Type", "application/json")
 	}
 
-	logRequest(request)
+	logRequest(request, c.VerboseLogging)
 
 	response, err := c.client.Do(request)
 	if err != nil {
@@ -112,7 +114,7 @@ func (c *IbkrWebClient) DoRequest(
 	}
 	defer response.Body.Close()
 
-	logResponse(response)
+	logResponse(response, c.VerboseLogging)
 
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
