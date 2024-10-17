@@ -240,7 +240,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	req.Header.Set("User-Agent", "golang/1.23.1")
 	req.Header.Set("Authorization", params.ToHeaderString())
 
-	logRequest(req)
+	logRequest(req, true)
 
 	rsp, err := client.Do(req)
 	if err != nil {
@@ -248,7 +248,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	}
 	defer rsp.Body.Close()
 
-	logResponse(rsp)
+	logResponse(rsp, true)
 
 	if rsp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad live session token statusCode: %v", rsp.StatusCode)
