@@ -41,14 +41,15 @@ type IbkrOAuthCredentials struct {
 }
 
 type IbkrOAuthContext struct {
-	ConsumerKey   string
-	SigningKey    *rsa.PrivateKey
-	EncryptionKey *rsa.PrivateKey
-	DhParams      *dsa.Parameters
-	AccessToken   string
-	AccessSecret  string
-	LstExpiration int64
-	Lst           string
+	ConsumerKey    string
+	SigningKey     *rsa.PrivateKey
+	EncryptionKey  *rsa.PrivateKey
+	DhParams       *dsa.Parameters
+	AccessToken    string
+	AccessSecret   string
+	LstExpiration  int64
+	Lst            string
+	VerboseLogging bool
 }
 
 type liveSessionTokenResponse struct {
@@ -81,12 +82,13 @@ func NewIbkrOAuthContext(
 	}
 
 	return &IbkrOAuthContext{
-		ConsumerKey:   consumerKey,
-		SigningKey:    signingKey,
-		EncryptionKey: encryptionKey,
-		DhParams:      dhParams,
-		AccessToken:   accessToken,
-		AccessSecret:  accessSecret,
+		ConsumerKey:    consumerKey,
+		SigningKey:     signingKey,
+		EncryptionKey:  encryptionKey,
+		DhParams:       dhParams,
+		AccessToken:    accessToken,
+		AccessSecret:   accessSecret,
+		VerboseLogging: false,
 	}, nil
 }
 
@@ -171,7 +173,9 @@ func (i *IbkrOAuthContext) GetOAuthHeader(method string, requestUrl string) (str
 		params.ToSignatureString(),
 	)
 
-	log.Printf("oauth header base string: %v", baseString)
+	if i.VerboseLogging {
+		log.Printf("oauth header base string: %v", baseString)
+	}
 
 	tokenBytes, err := base64.StdEncoding.DecodeString(i.Lst)
 	if err != nil {
@@ -215,7 +219,9 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	params["oauth_timestamp"] = getOAuthTimestamp()
 	params["oauth_token"] = i.AccessToken
 
-	params.logRaw()
+	if i.VerboseLogging {
+		params.logRaw()
+	}
 
 	baseString := fmt.Sprintf(
 		"%v%v&%v%v",
@@ -225,7 +231,9 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 		params.ToSignatureString(),
 	)
 
-	log.Printf("base string: %v", baseString)
+	if i.VerboseLogging {
+		log.Printf("base string: %v", baseString)
+	}
 
 	signature, err := SignRsa([]byte(baseString), i.SigningKey)
 	if err != nil {
@@ -243,7 +251,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	req.Header.Set("User-Agent", "golang/1.23.1")
 	req.Header.Set("Authorization", params.ToHeaderString())
 
-	logRequest(req, true)
+	logRequest(req, i.VerboseLogging)
 
 	rsp, err := client.Do(req)
 	if err != nil {
@@ -251,7 +259,7 @@ func (i *IbkrOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 	}
 	defer rsp.Body.Close()
 
-	logResponse(rsp, true)
+	logResponse(rsp, i.VerboseLogging)
 
 	if rsp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad live session token statusCode: %v", rsp.StatusCode)
