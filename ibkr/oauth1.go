@@ -29,6 +29,7 @@ type OAuthContext interface {
 	GenerateLiveSessionToken(client *http.Client, baseUrl string) error
 	GetOAuthHeader(method string, requestUrl string) (string, error)
 	ShouldReAuthenticate() bool
+	Reset()
 }
 
 type IbkrOAuthCredentials struct {
@@ -317,4 +318,9 @@ func (i *IbkrOAuthContext) ShouldReAuthenticate() bool {
 	currentTime := time.Now().Unix()
 
 	return i.LstExpiration-currentTime < LstExpirationThreshold
+}
+
+func (i *IbkrOAuthContext) Reset() {
+	i.Lst = ""
+	i.LstExpiration = 0
 }

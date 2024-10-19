@@ -17,6 +17,10 @@ func (i *MockOAuthContext) GenerateLiveSessionToken(client *http.Client, baseUrl
 func (i *MockOAuthContext) GetOAuthHeader(method string, requestUrl string) (string, error) {
 	return "OAuth MOCK HEADER", nil
 }
+func (i *MockOAuthContext) ShouldReAuthenticate() bool {
+	return false
+}
+func (i *MockOAuthContext) Reset() {}
 
 func NewTestIbkrClient(baseUrl string) *IbkrWebClient {
 	return &IbkrWebClient{

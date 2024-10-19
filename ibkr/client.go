@@ -143,6 +143,10 @@ func (c *IbkrWebClient) Authenticate() error {
 	return c.oauth.GenerateLiveSessionToken(c.client, c.BaseUrl)
 }
 
+func (c *IbkrWebClient) ResetAuthentication() {
+	c.oauth.Reset()
+}
+
 func (c *IbkrWebClient) ParseJsonResponse(response *clientResponse, v interface{}) error {
 	err := json.Unmarshal(response.bytes, v)
 	if err != nil {
