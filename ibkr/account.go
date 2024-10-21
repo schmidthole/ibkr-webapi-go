@@ -42,7 +42,11 @@ type SwitchAccountRequest struct {
 
 type SwitchAccountResponse struct {
 	Set       bool   `json:"set" validate:"required"`
-	AccountID string `json:"acctId" validate:"required"`
+	AccountID string `json:"acctId"`
+}
+
+type SwitchAccountResponseAlreadySet struct {
+	Success string `json:"success" validate:"required"`
 }
 
 func (c *IbkrWebClient) SwitchAccount(accountId string) error {
@@ -60,9 +64,15 @@ func (c *IbkrWebClient) SwitchAccount(accountId string) error {
 	}
 
 	var responseStruct SwitchAccountResponse
+	var altResponseStruct SwitchAccountResponseAlreadySet
 	err = c.ParseJsonResponse(response, &responseStruct)
 	if err != nil {
-		return err
+		err = c.ParseJsonResponse(response, &altResponseStruct)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	if !responseStruct.Set || (responseStruct.AccountID != accountId) {

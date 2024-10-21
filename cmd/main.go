@@ -29,6 +29,7 @@ func main() {
 	flag.Parse()
 
 	client := initClient(*oauthFlag)
+	client.VerboseLogging = true
 	log.Printf("client initialized, baseurl: %v", client.BaseUrl)
 
 	if *oauthFlag {
@@ -54,6 +55,11 @@ func main() {
 		panic(err)
 	}
 
+	err = client.SwitchAccount("DUA717516")
+	if err != nil {
+		panic(err)
+	}
+
 	_, err = client.SearchContractBySymbol("TQQQ")
 	if err != nil {
 		panic(err)
@@ -64,7 +70,7 @@ func main() {
 		panic(err)
 	}
 
-	_, err = client.GetPortfolioAccountLedger("DFA717515")
+	_, err = client.GetPortfolioAccountLedger("DUA717516")
 	if err != nil {
 		panic(err)
 	}
